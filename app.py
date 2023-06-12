@@ -1,7 +1,7 @@
 import openai
 import gradio as gr
 
-openai.api_key = "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"
+openai.api_key = ""
 
 def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0):
     response = openai.ChatCompletion.create(
