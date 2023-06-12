@@ -15,8 +15,8 @@ def get_response(text):
     messages =  [  
         {'role':'system', 'content':'You are a paper abstract information extractor, \
         the user inputs a paper abstract, and you are responsible for extracting information. \
-        The information extracted is:  What state of the cancer (this state is usually a mutation in a driver gene) is dependent on which genes or pathways. \
-        Do not show other information. When there is no such information, just return "No dependency"'},  
+        The extracted information should write in the form of:  What state of the cancer (this state is usually a mutation in a driver gene) is dependent on which genes or pathways. \
+        Do not show other information. When there is no such information (ie. cancer is not dependent on any gene or pathway from the abstract), just return "No dependency"'},  
         {'role':'user', 'content':'Abstract: In non–small cell lung cancer (NSCLC), \
         concurrent mutations in the oncogene KRAS and the tumor suppressor STK11 encoding the kinase LKB1 result in aggressive tumors \
         prone to metastasis but with liabilities arising from reprogrammed metabolism. \
@@ -74,7 +74,17 @@ cells to ML-162 treatment. Finally, we demonstrated that p53-mutation correlates
 Conclusions: This study demonstrates that p53-mutant TNBC cells have critical, unique survival pathways that can be effectively targeted. \
 Our results illustrate the intrinsic vulnerability of p53-mutant TNBCs to ferroptosis, and highlight GPX4 as a promising target for the \
 precision treatment of p53-mutant triple-negative breast cancer."
-]]
+],
+["T cells acquire a regulatory phenotype when their T cell antigen receptors (TCRs) experience an intermediate- to high-affinity \
+interaction with a self-peptide presented via the major histocompatibility complex (MHC). Using TCRβ sequences from flow-sorted human cells, \
+we identified TCR features that promote regulatory T cell (Treg) fate. From these results, we developed a scoring system to quantify TCR-intrinsic \
+regulatory potential (TiRP). When applied to the tumor microenvironment, TiRP scoring helped to explain why only some T cell clones maintained the \
+conventional T cell (Tconv) phenotype through expansion. To elucidate drivers of these predictive TCR features, we then examined the two elements of the \
+Treg TCR ligand separately: the self-peptide and the human MHC class II molecule. These analyses revealed that hydrophobicity in the third \
+complementarity-determining region (CDR3β) of the TCR promotes reactivity to self-peptides, while TCR variable gene (TRBV gene) usage shapes the TCR’s \
+general propensity for human MHC class II-restricted activation."
+]
+]
 
 def gradio():
 
@@ -83,7 +93,7 @@ def gradio():
     output_text = gr.outputs.Textbox(label="Extracted information")
 
     interface = gr.Interface(fn=get_response, inputs=[input_text], outputs=output_text, examples=exp,
-                            article="Example abstract from https://doi.org/10.21203/rs.3.rs-1547583/v1")
+                            article="Example abstract from https://doi.org/10.21203/rs.3.rs-1547583/v1 and https://doi.org/10.1038/s41590-022-01129-x")
     interface.launch()
 
 
