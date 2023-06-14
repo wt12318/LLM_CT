@@ -1,6 +1,6 @@
 import openai
 import gradio as gr
-
+import json
 openai.api_key = ""
 
 def get_completion_from_messages(messages, model="gpt-3.5-turbo-0613", temperature=0):
