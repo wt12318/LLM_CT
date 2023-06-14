@@ -3,7 +3,7 @@ import gradio as gr
 
 openai.api_key = ""
 
-def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0):
+def get_completion_from_messages(messages, model="gpt-3.5-turbo-0613", temperature=0):
     response = openai.ChatCompletion.create(
          model=model,
          messages=messages,
@@ -12,11 +12,16 @@ def get_completion_from_messages(messages, model="gpt-3.5-turbo", temperature=0)
     return response.choices[0].message["content"]
 
 def get_response(text):
-    messages =  [  
-        {'role':'system', 'content':'You are a paper abstract information extractor, \
-        the user inputs a paper abstract, and you are responsible for extracting information. \
+    messages =  [
+        {'role':'system', 'content':'You are a paper abstract information extractor, Your task is to perform the following actions:\
+        1. the user inputs a paper abstract, and you are responsible for extracting information. \
         The extracted information should write in the form of:  What state of the cancer (this state is usually a mutation in a driver gene) is dependent on which genes or pathways. \
-        Do not show other information. When there is no such information (ie. cancer is not dependent on any gene or pathway from the abstract), just return "No dependency"'},  
+        Do not show other information. When there is no such information (ie. cancer is not dependent on any gene or pathway from the \
+        abstract), just return "No dependency". \
+        2. Format output as a json object that contains the following keys: cancer, state, gene/pathway. \
+        Use the following format: \
+        Extracted information: <Extracted information> \
+        Output JSON: <json with cancer, state and gene/pathway>. When there is no dependency, do not output JSON'},
         {'role':'user', 'content':'Abstract: In non–small cell lung cancer (NSCLC), \
         concurrent mutations in the oncogene KRAS and the tumor suppressor STK11 encoding the kinase LKB1 result in aggressive tumors \
         prone to metastasis but with liabilities arising from reprogrammed metabolism. \
@@ -27,8 +32,9 @@ def get_response(text):
         another nitrogen-related metabolic pathway, in both mouse and human KL mutant tumors. KL cells contain high levels of HBP metabolites, \
         higher flux through the HBP pathway and elevated dependence on the HBP enzyme Glutamine-Fructose-6-Phosphate Transaminase 2 (GFPT2). \
         GFPT2 inhibition selectively reduced KL tumor cell growth in culture, xenografts and genetically-modified mice. \
-        Our results define a new metabolic vulnerability in KL tumors and provide a rationale for targeting GFPT2 in this aggressive NSCLC subtype.'}, 
-        {'role':'assistant', 'content':'KRAS/LKB1 co-mutant non–small cell lung cancer is dependent on Hexosamine biosynthesis pathway (HBP) and GFPT2.'},   
+        Our results define a new metabolic vulnerability in KL tumors and provide a rationale for targeting GFPT2 in this aggressive NSCLC subtype.'},
+        {'role':'assistant', 'content':'Extracted information: KRAS/LKB1 co-mutant non–small cell lung cancer is dependent on Hexosamine \
+        biosynthesis pathway (HBP) and GFPT2. Output JSON: {"cancer":"non–small cell lung cancer","state":"KRAS/LKB1 co-mutant","gene/pathway":"Hexosamine biosynthesis pathway (HBP) and GFPT2"}'},
         {'role':'user', 'content':'Abstract: Background: Thymidylate synthase (TYMS) is a successful chemotherapeutic target for anticancer therapy. \
         Numerous TYMS inhibitors have been developed and used for treating gastrointestinal cancer now, but they have limited clinical benefits due to \
         the prevalent unresponsiveness and toxicity. It is urgent to identify a predictive biomarker to guide the precise clinical use of TYMS inhibitors. \
@@ -42,7 +48,7 @@ def get_response(text):
         TYMS mRNA levels than those of progressive diseases. NIPBL inactivation decreases the therapeutic responses of \
         gastrointestinal cancer to RTX through blocking MYC. Interpretation: Our study unveils a mechanism of how TYMS is \
         transcriptionally regulated by MYC, and provides rationales for the precise use of TYMS inhibitors in the clinic.'},
-        {'role':'assistant', 'content':'Gastrointestinal cancer with up-regulated MYC is dependent on TYMS.'},
+        {'role':'assistant', 'content':'Extracted information: Gastrointestinal cancer with up-regulated MYC is dependent on TYMS. Output JSON: {"cancer":"Gastrointestinal cancer","state":"up-regulated MYC","gene/pathway":"TYMS"}'},
         {'role':'user', 'content':'Abstract: Studies have characterized the immune escape landscape across primary tumors. \
         However, whether late-stage metastatic tumors present differences in genetic immune escape (GIE) prevalence and dynamics remains unclear. \
         We performed a pan-cancer characterization of GIE prevalence across six immune escape pathways in 6,319 uniformly processed tumor samples. \
@@ -52,11 +58,11 @@ def get_response(text):
         in tumor evolution and focal loss of heterozygosity of HLA-I tends to eliminate the HLA allele, presenting the largest neoepitope repertoire. \
         Finally, high mutational burden tumors showed a tendency toward focal loss of heterozygosity of HLA-I as the immune evasion mechanism, \
         whereas, in hypermutated tumors, other immune evasion strategies prevail.'},
-        {'role':'assistant', 'content':'No dependency'}
+        {'role':'assistant', 'content':'Extracted information: No dependency}'}
     ]
     messages.append({'role':'user', 'content':f"Abstract: {text}"})
     response = get_completion_from_messages(messages, temperature=0)
-    return response
+    return response.split("Output JSON: ")[0], json.loads(response.split("Output JSON: ")[1])
 
 exp = [[
     "Background: Triple-negative breast cancer (TNBC) is an aggressive subtype of breast cancer, \
@@ -92,7 +98,10 @@ def gradio():
 
     output_text = gr.outputs.Textbox(label="Extracted information")
 
-    interface = gr.Interface(fn=get_response, inputs=[input_text], outputs=output_text, examples=exp,
+    json_output = gr.JSON(label = "JSON")
+
+    interface = gr.Interface(fn=get_response, inputs=[input_text], outputs=[output_text,json_output], 
+                            examples=exp,
                             article="Example abstract from https://doi.org/10.21203/rs.3.rs-1547583/v1 and https://doi.org/10.1038/s41590-022-01129-x")
     interface.launch()
 
